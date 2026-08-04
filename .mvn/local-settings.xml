@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  本机构建辅助配置：当 HOME 解析异常导致 Maven 本地仓库落到 C:\.m2 时，
+  使用 mvn -s .mvn/local-settings.xml 显式指定本地仓库路径。
+  仅影响构建行为，可安全提交；不使用 -s 时该文件不生效。
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <localRepository>C:\Users\tuhonglei\.m2\repository</localRepository>
+</settings>
