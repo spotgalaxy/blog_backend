@@ -32,24 +32,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                // /api/auth/me 必须先于 GET /api/** 放行规则声明，否则会被 permitAll 放行导致未认证返回 200
-                .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
-                // 只放行博客公开读取接口，新增 GET 接口默认受保护
-                .requestMatchers(HttpMethod.GET,
-                        "/api/posts", "/api/posts/tags", "/api/posts/{slug}",
-                        "/api/projects", "/api/projects/{slug}").permitAll()
-                .anyRequest().authenticated())
-            .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {
-                res.setStatus(401);
-                res.setContentType("application/json;charset=UTF-8");
-                res.getWriter().write(objectMapper.writeValueAsString(Result.error(401, "未认证")));
-            }))
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            // 【新增这一行】放行 Actuator 健康检查接口，供 UptimeRobot 保活探测
+            .requestMatchers("/actuator/**").permitAll()
+            
+            .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+            // /api/auth/me 必须先于 GET /api/** 放行规则声明，否则会被 permitAll 放行导致未认证返回 200
+            .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+            // 只放行博客公开读取接口，新增 GET 接口默认受保护
+            .requestMatchers(HttpMethod.GET,
+                    "/api/posts", "/api/posts/tags", "/api/posts/{slug}",
+                    "/api/projects", "/api/projects/{slug}").permitAll()
+            .anyRequest().authenticated())
+        .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {
+            res.setStatus(401);
+            res.setContentType("application/json;charset=UTF-8");
+            res.getWriter().write(objectMapper.writeValueAsString(Result.error(401, "未认证")));
+        }))
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+}
+
 }
