@@ -40,6 +40,11 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .requestMatchers("/actuator/**").permitAll()
             
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+            // 前台匿名操作：评论读取/提交、阅读量上报、访客统计上报、AI 摘要读取
+            .requestMatchers(HttpMethod.GET,
+                    "/api/posts/{slug}/comments", "/api/posts/{slug}/summary").permitAll()
+            .requestMatchers(HttpMethod.POST,
+                    "/api/posts/*/comments", "/api/posts/*/view", "/api/stats/track").permitAll()
             // /api/auth/me 必须先于 GET /api/** 放行规则声明，否则会被 permitAll 放行导致未认证返回 200
             .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
             // 只放行博客公开读取接口，新增 GET 接口默认受保护
