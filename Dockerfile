@@ -6,6 +6,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
+ENV TZ=Asia/Shanghai
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
