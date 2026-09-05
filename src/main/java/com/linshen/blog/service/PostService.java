@@ -16,4 +16,7 @@ public interface PostService {
     void delete(Long id);
     PostResp publish(Long id, boolean published);
     List<Map<String, Object>> tags();
+
+    /** 阅读量 +1；同日同 IP 同文章只计一次，返回本次是否计数 */
+    boolean incrementView(String slug, String ip);
 }

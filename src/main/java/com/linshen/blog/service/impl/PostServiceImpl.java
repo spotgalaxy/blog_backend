@@ -1,13 +1,16 @@
 package com.linshen.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.linshen.blog.dto.BizException;
 import com.linshen.blog.dto.PageResult;
 import com.linshen.blog.dto.PostReq;
 import com.linshen.blog.dto.PostResp;
 import com.linshen.blog.entity.Post;
+import com.linshen.blog.entity.VisitLog;
 import com.linshen.blog.mapper.PostMapper;
+import com.linshen.blog.mapper.VisitLogMapper;
 import com.linshen.blog.service.PostService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -20,9 +23,11 @@ import java.util.Map;
 @Service
 public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
+    private final VisitLogMapper visitLogMapper;
 
-    public PostServiceImpl(PostMapper postMapper) {
+    public PostServiceImpl(PostMapper postMapper, VisitLogMapper visitLogMapper) {
         this.postMapper = postMapper;
+        this.visitLogMapper = visitLogMapper;
     }
 
     @Override
@@ -133,6 +138,34 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Map<String, Object>> tags() {
         return postMapper.selectTagCounts();
+    }
+
+    @Override
+    @Transactional
+    public boolean incrementView(String slug, String ip) {
+        Post post = postMapper.selectOne(
+                new LambdaQueryWrapper<Post>().eq(Post::getSlug, slug));
+        if (post == null || Boolean.TRUE.equals(post.getDraft())) {
+            throw new BizException(404, "文章不存在");
+        }
+        // 同日同 IP 同文章只计一次（无需 Redis，个人博客量级）
+        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime today = now.toLocalDate().atStartOfDay().atOffset(now.getOffset());
+        long exists = visitLogMapper.selectCount(new LambdaQueryWrapper<VisitLog>()
+                .eq(VisitLog::getPath, "/blog/" + slug)
+                .eq(VisitLog::getIp, ip)
+                .ge(VisitLog::getCreatedAt, today));
+        if (exists > 0) return false;
+
+        VisitLog v = new VisitLog();
+        v.setPath("/blog/" + slug);
+        v.setIp(ip);
+        visitLogMapper.insert(v);
+
+        postMapper.update(null, new LambdaUpdateWrapper<Post>()
+                .eq(Post::getId, post.getId())
+                .setSql("view_count = view_count + 1"));
+        return true;
     }
 
     private PostResp toResp(Post post) {

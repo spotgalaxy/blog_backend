@@ -5,6 +5,7 @@ import com.linshen.blog.dto.PostResp;
 import com.linshen.blog.dto.PageResult;
 import com.linshen.blog.dto.Result;
 import com.linshen.blog.service.PostService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -68,5 +69,12 @@ public class PostController {
             published = Boolean.TRUE.equals(body.get("published"));
         }
         return Result.ok(postService.publish(id, published));
+    }
+
+    @PostMapping("/{slug}/view")
+    public Result<Map<String, Object>> view(@PathVariable String slug,
+                                            HttpServletRequest request) {
+        boolean counted = postService.incrementView(slug, request.getRemoteAddr());
+        return Result.ok(Map.of("counted", counted));
     }
 }
