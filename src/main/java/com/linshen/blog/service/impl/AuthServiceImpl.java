@@ -42,4 +42,18 @@ public class AuthServiceImpl implements AuthService {
         rateLimiter.reset(key);
         return new LoginResp(jwtUtil.generate(username), jwtUtil.getExpireHours() * 3600);
     }
+
+    @Override
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+        if (user == null) throw new BizException(404, "用户不存在");
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new BizException(400, "旧密码错误");
+        }
+        User update = new User();
+        update.setId(user.getId());
+        update.setPasswordHash(passwordEncoder.encode(newPassword));
+        userMapper.updateById(update);
+    }
 }

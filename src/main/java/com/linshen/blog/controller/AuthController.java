@@ -1,5 +1,6 @@
 package com.linshen.blog.controller;
 
+import com.linshen.blog.dto.ChangePasswordReq;
 import com.linshen.blog.dto.LoginReq;
 import com.linshen.blog.dto.LoginResp;
 import com.linshen.blog.dto.Result;
@@ -27,5 +28,13 @@ public class AuthController {
     @GetMapping("/me")
     public Result<Map<String, String>> me(Authentication authentication) {
         return Result.ok(Map.of("username", authentication.getName()));
+    }
+
+    @PutMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordReq req,
+                                       Authentication authentication) {
+        authService.changePassword(authentication.getName(),
+                req.getOldPassword(), req.getNewPassword());
+        return Result.ok(null);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -60,5 +61,53 @@ class AuthControllerTest {
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.username").value("admin"));
+    }
+
+    @Test
+    void changePassword_oldPasswordRequired() throws Exception {
+        String token = loginToken();
+        mvc.perform(put("/api/auth/password")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"wrong\",\"newPassword\":\"newpass123\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void changePassword_withoutToken_returns401() throws Exception {
+        mvc.perform(put("/api/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"x\",\"newPassword\":\"newpass123\"}"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void changePassword_thenLoginWithNewPassword() throws Exception {
+        String token = loginToken();
+        mvc.perform(put("/api/auth/password")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"" + ADMIN_PASSWORD + "\",\"newPassword\":\"newpass123\"}"))
+            .andExpect(status().isOk());
+
+        // 旧密码失效
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"" + ADMIN_PASSWORD + "\"}"))
+            .andExpect(status().isUnauthorized());
+        // 新密码可登录
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"newpass123\"}"))
+            .andExpect(status().isOk());
+    }
+
+    private String loginToken() throws Exception {
+        String body = mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"" + ADMIN_PASSWORD + "\"}"))
+                .andReturn().getResponse().getContentAsString();
+        return om.readTree(body).path("data").path("token").asText();
     }
 }
