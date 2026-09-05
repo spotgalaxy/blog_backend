@@ -13,7 +13,10 @@ public class Project {
     private String slug;
     private String name;
     private String role;
-    private Integer year;
+    /** 开发开始年月,格式 2024-03 */
+    private String devStart;
+    /** 开发结束年月,格式 2025-01;进行中则为 null */
+    private String devEnd;
     private String summary;
     private String content;
     private String cover;

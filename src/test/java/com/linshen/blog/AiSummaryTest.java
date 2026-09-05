@@ -92,12 +92,12 @@ class AiSummaryTest {
 
     @Test
     void projectIntro_generatedAndRequiresAuth() throws Exception {
-        when(llmClient.projectIntro(anyString(), anyString(), any(), anyString()))
+        when(llmClient.projectIntro(anyString(), anyString(), any(), any(), anyString()))
                 .thenReturn("一个暖色调的个人博客站点。");
         String body = mvc.perform(post("/api/projects")
                         .header("Authorization", "Bearer " + token())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"slug\":\"intro-proj\",\"name\":\"测试作品\",\"role\":\"前端开发\",\"year\":2026,\"summary\":\"\",\"content\":\"一个博客项目\",\"featured\":false,\"sortOrder\":99}"))
+                        .content("{\"slug\":\"intro-proj\",\"name\":\"测试作品\",\"role\":\"前端开发\",\"devStart\":\"2026-01\",\"devEnd\":\"2026-06\",\"summary\":\"\",\"content\":\"一个博客项目\",\"featured\":false,\"sortOrder\":99}"))
                 .andReturn().getResponse().getContentAsString();
         long id = om.readTree(body).path("data").path("id").asLong();
 

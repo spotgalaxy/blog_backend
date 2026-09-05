@@ -64,7 +64,7 @@ public class AiSummaryServiceImpl implements AiSummaryService {
     public String generateProjectIntro(Long projectId) {
         Project p = projectMapper.selectById(projectId);
         if (p == null) throw new BizException(404, "作品不存在");
-        return llmClient.projectIntro(p.getName(), p.getRole(), p.getYear(), p.getContent());
+        return llmClient.projectIntro(p.getName(), p.getRole(), p.getDevStart(), p.getDevEnd(), p.getContent());
     }
 
     private Map<String, Object> toMap(AiSummary s) {

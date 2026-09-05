@@ -1,6 +1,7 @@
 package com.linshen.blog.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -14,7 +15,10 @@ public class ProjectReq {
     private String name;
     @Size(max = 100, message = "角色长度不能超过 100")
     private String role;
-    private Integer year;
+    @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "开发开始时间格式应为 年-月，如 2024-03")
+    private String devStart;
+    @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "开发结束时间格式应为 年-月，如 2025-01")
+    private String devEnd;
     @Size(max = 500, message = "摘要长度不能超过 500")
     private String summary;
     private String content;

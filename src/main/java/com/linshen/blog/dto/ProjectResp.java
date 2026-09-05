@@ -10,7 +10,8 @@ public class ProjectResp {
     private String slug;
     private String name;
     private String role;
-    private Integer year;
+    private String devStart;
+    private String devEnd;
     private String summary;
     private String content;
     private String cover;

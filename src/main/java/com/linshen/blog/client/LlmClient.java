@@ -42,10 +42,13 @@ public class LlmClient {
     }
 
     /** 项目一句话介绍：30-60 字，用于作品列表展示，返回介绍正文 */
-    public String projectIntro(String name, String role, Integer year, String content) {
+    public String projectIntro(String name, String role, String devStart, String devEnd, String content) {
         StringBuilder input = new StringBuilder("项目名称：").append(name);
         if (role != null && !role.isBlank()) input.append("\n我的角色：").append(role);
-        if (year != null) input.append("\n年份：").append(year);
+        if (devStart != null && !devStart.isBlank()) {
+            input.append("\n开发时间：").append(devStart);
+            input.append(devEnd != null && !devEnd.isBlank() ? " 至 " + devEnd : " 至今");
+        }
         input.append("\n\n项目介绍正文：\n").append(truncate(content, 2000));
         return chat(List.of(
                 Map.of("role", "system",

@@ -37,7 +37,7 @@ class ProjectControllerTest {
                         .header("Authorization", "Bearer " + token())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"slug\":\"" + slug + "\",\"name\":\"项目 " + slug
-                                + "\",\"role\":\"前端开发\",\"year\":2026,\"summary\":\"s\",\"content\":\"body\",\"featured\":true,\"sortOrder\":1}"))
+                                + "\",\"role\":\"前端开发\",\"devStart\":\"2026-01\",\"devEnd\":\"2026-06\",\"summary\":\"s\",\"content\":\"body\",\"featured\":true,\"sortOrder\":1}"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return om.readTree(body).path("data").path("id").asLong();
