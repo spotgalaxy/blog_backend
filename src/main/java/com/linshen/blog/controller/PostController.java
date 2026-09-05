@@ -4,6 +4,7 @@ import com.linshen.blog.dto.PostReq;
 import com.linshen.blog.dto.PostResp;
 import com.linshen.blog.dto.PageResult;
 import com.linshen.blog.dto.Result;
+import com.linshen.blog.service.AiSummaryService;
 import com.linshen.blog.service.PostService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -17,9 +18,11 @@ import java.util.Map;
 @RequestMapping("/api/posts")
 public class PostController {
     private final PostService postService;
+    private final AiSummaryService aiSummaryService;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, AiSummaryService aiSummaryService) {
         this.postService = postService;
+        this.aiSummaryService = aiSummaryService;
     }
 
     @GetMapping
@@ -76,5 +79,10 @@ public class PostController {
                                             HttpServletRequest request) {
         boolean counted = postService.incrementView(slug, request.getRemoteAddr());
         return Result.ok(Map.of("counted", counted));
+    }
+
+    @GetMapping("/{slug}/summary")
+    public Result<Map<String, Object>> summary(@PathVariable String slug) {
+        return Result.ok(aiSummaryService.findBySlug(slug));
     }
 }
