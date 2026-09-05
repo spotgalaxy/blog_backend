@@ -11,6 +11,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -87,5 +88,31 @@ class AiSummaryTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"postId\":" + id + "}"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void projectIntro_generatedAndRequiresAuth() throws Exception {
+        when(llmClient.projectIntro(anyString(), anyString(), any(), anyString()))
+                .thenReturn("一个暖色调的个人博客站点。");
+        String body = mvc.perform(post("/api/projects")
+                        .header("Authorization", "Bearer " + token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slug\":\"intro-proj\",\"name\":\"测试作品\",\"role\":\"前端开发\",\"year\":2026,\"summary\":\"\",\"content\":\"一个博客项目\",\"featured\":false,\"sortOrder\":99}"))
+                .andReturn().getResponse().getContentAsString();
+        long id = om.readTree(body).path("data").path("id").asLong();
+
+        // 未带 token 拒绝
+        mvc.perform(post("/api/ai/project-intro")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"projectId\":" + id + "}"))
+            .andExpect(status().isUnauthorized());
+
+        // 管理端生成
+        mvc.perform(post("/api/ai/project-intro")
+                    .header("Authorization", "Bearer " + token())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"projectId\":" + id + "}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.summary").value("一个暖色调的个人博客站点。"));
     }
 }

@@ -22,4 +22,11 @@ public class AiController {
         if (postId == null) throw BizException.badRequest("postId 不能为空");
         return Result.ok(aiSummaryService.getOrCreate(postId));
     }
+
+    @PostMapping("/project-intro")
+    public Result<Map<String, Object>> generateProjectIntro(@RequestBody Map<String, Long> body) {
+        Long projectId = body == null ? null : body.get("projectId");
+        if (projectId == null) throw BizException.badRequest("projectId 不能为空");
+        return Result.ok(Map.of("summary", aiSummaryService.generateProjectIntro(projectId)));
+    }
 }

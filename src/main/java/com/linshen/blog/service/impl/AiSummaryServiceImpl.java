@@ -5,8 +5,10 @@ import com.linshen.blog.client.LlmClient;
 import com.linshen.blog.dto.BizException;
 import com.linshen.blog.entity.AiSummary;
 import com.linshen.blog.entity.Post;
+import com.linshen.blog.entity.Project;
 import com.linshen.blog.mapper.AiSummaryMapper;
 import com.linshen.blog.mapper.PostMapper;
+import com.linshen.blog.mapper.ProjectMapper;
 import com.linshen.blog.service.AiSummaryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +20,14 @@ import java.util.Map;
 public class AiSummaryServiceImpl implements AiSummaryService {
     private final AiSummaryMapper aiSummaryMapper;
     private final PostMapper postMapper;
+    private final ProjectMapper projectMapper;
     private final LlmClient llmClient;
 
     public AiSummaryServiceImpl(AiSummaryMapper aiSummaryMapper, PostMapper postMapper,
-                                LlmClient llmClient) {
+                                ProjectMapper projectMapper, LlmClient llmClient) {
         this.aiSummaryMapper = aiSummaryMapper;
         this.postMapper = postMapper;
+        this.projectMapper = projectMapper;
         this.llmClient = llmClient;
     }
 
@@ -54,6 +58,13 @@ public class AiSummaryServiceImpl implements AiSummaryService {
                 new LambdaQueryWrapper<AiSummary>().eq(AiSummary::getPostId, post.getId()));
         if (s == null) throw new BizException(404, "暂无摘要");
         return toMap(s);
+    }
+
+    @Override
+    public String generateProjectIntro(Long projectId) {
+        Project p = projectMapper.selectById(projectId);
+        if (p == null) throw new BizException(404, "作品不存在");
+        return llmClient.projectIntro(p.getName(), p.getRole(), p.getYear(), p.getContent());
     }
 
     private Map<String, Object> toMap(AiSummary s) {
